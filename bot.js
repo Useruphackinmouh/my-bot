@@ -235,7 +235,7 @@ async function showQuestion(ctx, userId) {
             `❓ *السؤال ${currentQuestionIndex + 1}:*\n${question.question}\n\n${options}`,
             {
                 parse_mode: "Markdown",
-                ...Markup.keyboard(question.options.map(option => [option])
+                ...Markup.keyboard(question.options.map(option => [option])).resize()
             }
         );
         userProgress[userId].messageIds = [message.message_id];
