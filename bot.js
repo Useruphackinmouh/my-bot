@@ -191,7 +191,12 @@ async function showMorningAzkar(ctx, index) {
         userProgress[userId].messageIds = [message.message_id];
         saveUserData();
     } else {
-        await ctx.reply("لا يوجد المزيد من الأذكار.");
+        await ctx.reply(
+            "لا يوجد المزيد من الأذكار.",
+            Markup.inlineKeyboard([
+                Markup.button.callback("العودة إلى القائمة الرئيسية ⏩", "back_to_main_menu")
+            ])
+        );
     }
 }
 
@@ -213,7 +218,12 @@ async function showEveningAzkar(ctx, index) {
         userProgress[userId].messageIds = [message.message_id];
         saveUserData();
     } else {
-        await ctx.reply("لا يوجد المزيد من الأذكار.");
+        await ctx.reply(
+            "لا يوجد المزيد من الأذكار.",
+            Markup.inlineKeyboard([
+                Markup.button.callback("العودة إلى القائمة الرئيسية ⏩", "back_to_main_menu")
+            ])
+        );
     }
 }
 
