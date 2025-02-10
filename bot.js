@@ -125,12 +125,13 @@ app.get('/health', (req, res) => {
     res.status(200).send('Bot is running!');
 });
 
-// بدء الخادم
-app.listen(port, () => {
-    console.log(`Health check server is running on http://localhost:${port}`);
+// بدء الخادم على منفذ مختلف
+const healthCheckPort = 3001; // منفذ مختلف لمنع التعارض
+app.listen(healthCheckPort, () => {
+    console.log(`Health check server is running on http://localhost:${healthCheckPort}`);
 });
 
-// إطلاق البوت مع تكامل Express
+// إطلاق البوت بدون تكامل الويب هوك
 const bot = new Telegraf(TOKEN);
 loadUserData();
 
@@ -143,10 +144,8 @@ bot.action("continue", continueHandler);
 bot.action("back_to_main", backToMainHandler);
 
 // تشغيل البوت
-bot.launch({
-    webhook: {
-        domain: 'https://your-render-app-url.onrender.com', // استبدل هذا بعنوان تطبيقك على Render
-        port: port // استخدم المنفذ الذي تم تحديده في البيئة
-    }
+bot.launch().then(() => {
+    console.log("Bot started...");
+}).catch((err) => {
+    console.error("Failed to start bot:", err);
 });
-console.log("Bot started...");
