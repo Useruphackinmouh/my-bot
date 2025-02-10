@@ -27,7 +27,9 @@ function loadUserData() {
 // حفظ بيانات المستخدمين إلى الملف
 function saveUserData() {
     try {
-        fs.writeFileSync(USER_DATA_FILE, JSON.stringify(userProgress, null, 2));
+        if (Object.keys(userProgress).length > 0) {
+            fs.writeFileSync(USER_DATA_FILE, JSON.stringify(userProgress, null, 2));
+        }
     } catch (error) {
         console.error('Error saving user data:', error);
     }
@@ -36,7 +38,7 @@ function saveUserData() {
 // حذف الرسائل السابقة
 async function deletePreviousMessages(ctx) {
     const userId = ctx.from.id;
-    if (userProgress[userId]?.messageIds) {
+    if (userProgress[userId] && userProgress[userId].messageIds) {
         for (const msgId of userProgress[userId].messageIds) {
             try {
                 await ctx.deleteMessage(msgId);
@@ -150,41 +152,40 @@ const eveningAzkar = [
 async function showMorningAzkar(ctx, index) {
     const userId = ctx.from.id;
     await deletePreviousMessages(ctx);
-    const message = await ctx.reply(
-        `📖 *الذكر ${index + 1}:*\n${morningAzkar[index]}`,
-        {
-            parse_mode: "Markdown",
-            ...Markup.inlineKeyboard([
-                Markup.button.callback("المواصلة ➡️", `morning_${index + 1}`),
-                Markup.button.callback("العودة 🔙", "back_to_morning_menu")
-            ])
-        }
-    );
-    userProgress[userId].messageIds = [message.message_id];
-    saveUserData();
+    if (index >= 0 && index < morningAzkar.length) {
+        const message = await ctx.reply(
+            `📖 *الذكر ${index + 1}:*\n${morningAzkar[index]}`,
+            {
+                parse_mode: "Markdown",
+                ...Markup.inlineKeyboard([
+                    Markup.button.callback("المواصلة ➡️", `morning_${index + 1}`),
+                    Markup.button.callback("العودة 🔙", "back_to_morning_menu")
+                ])
+            }
+        );
+        userProgress[userId].messageIds = [message.message_id];
+        saveUserData();
+    }
 }
 
 // عرض ذكر معين من أذكار المساء
 async function showEveningAzkar(ctx, index) {
     const userId = ctx.from.id;
     await deletePreviousMessages(ctx);
-    const message = await ctx.reply(
-        `📖 *الذكر ${index + 1}:*\n${eveningAzkar[index]}`,
-        {
-            parse_mode: "Markdown",
-            ...Markup.inlineKeyboard([
-                Markup.button.callback("المواصلة ➡️", `evening_${index + 1}`),
-                Markup.button.callback("العودة 🔙", "back_to_evening_menu")
-            ])
-        }
-    );
-    userProgress[userId].messageIds = [message.message_id];
-    saveUserData();
-}
-
-// معالجة الأسئلة
-function questionsHandler(ctx) {
-    ctx.reply("📚 هذه قائمة الأسئلة المتاحة:\n1. ما هو ترتيب شهر رمضان؟\n2. ما هو حكم صيام رمضان؟");
+    if (index >= 0 && index < eveningAzkar.length) {
+        const message = await ctx.reply(
+            `📖 *الذكر ${index + 1}:*\n${eveningAzkar[index]}`,
+            {
+                parse_mode: "Markdown",
+                ...Markup.inlineKeyboard([
+                    Markup.button.callback("المواصلة ➡️", `evening_${index + 1}`),
+                    Markup.button.callback("العودة 🔙", "back_to_evening_menu")
+                ])
+            }
+        );
+        userProgress[userId].messageIds = [message.message_id];
+        saveUserData();
+    }
 }
 
 // تهيئة البوت
@@ -194,13 +195,39 @@ loadUserData();
 // الأوامر
 bot.start(start);
 bot.hears("Start", toMainMenu);
-bot.hears("الأسئلة 🤓", questionsHandler);
+bot.hears("الأسئلة 🤓", (ctx) => ctx.reply("هذه الميزة غير متاحة حاليًا."));
 bot.hears("أذكار ❤️‍🩹", azkarMenu);
-bot.hears("القرءان الكريم 📖😍", (ctx) => ctx.reply("🚧 غير متاح حاليًا."));
-bot.hears("تلاوة 🥰", (ctx) => ctx.reply("🚧 غير متاح حاليًا."));
+bot.hears("القرءان الكريم 📖😍", (ctx) => ctx.reply("هذه الميزة غير متاحة حاليًا."));
+bot.hears("تلاوة 🥰", (ctx) => ctx.reply("هذه الميزة غير متاحة حاليًا."));
 bot.hears("رجوع 💢", toMainMenu);
 bot.hears("أذكار الصباح ☀", morningAzkarMenu);
 bot.hears("أذكار المساء 🌝", eveningAzkarMenu);
 
+// معالجة أذكار الصباح
+for (let i = 0; i < 10; i++) {
+    bot.hears(`الذكر ${i + 1}`, (ctx) => showMorningAzkar(ctx, i));
+    bot.action(`morning_${i + 1}`, (ctx) => showMorningAzkar(ctx, i));
+}
+
+// معالجة أذكار المساء
+for (let i = 0; i < 10; i++) {
+    bot.hears(`الذكر ${i + 1}`, (ctx) => showEveningAzkar(ctx, i));
+    bot.action(`evening_${i + 1}`, (ctx) => showEveningAzkar(ctx, i));
+}
+
+// الرجوع إلى قائمة أذكار الصباح
+bot.action("back_to_morning_menu", (ctx) => morningAzkarMenu(ctx));
+
+// الرجوع إلى قائمة أذكار المساء
+bot.action("back_to_evening_menu", (ctx) => eveningAzkarMenu(ctx));
+
 // تشغيل البوت باستخدام Long Polling
-bot.launch({ polling
+bot.launch({ polling: true }).then(() => {
+    console.log("Bot is running...");
+}).catch((error) => {
+    console.error("Error starting bot:", error);
+});
+
+// إغلاق البوت بشكل أنيق عند إيقاف التشغيل
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
