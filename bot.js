@@ -2,7 +2,7 @@ const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3000; // استخدام المنفذ المحدد في البيئة أو 3000 كمنفذ افتراضي
+const port = process.env.PORT || 3000;
 
 const TOKEN = "7733359265:AAFOs2Jqssu3T4oEnW0oPew7iPhK564PSUE"; // استبدل التوكن هنا
 const QUESTIONS = [
@@ -125,13 +125,12 @@ app.get('/health', (req, res) => {
     res.status(200).send('Bot is running!');
 });
 
-// بدء الخادم على منفذ مختلف
-const healthCheckPort = 3001; // منفذ مختلف لمنع التعارض
-app.listen(healthCheckPort, () => {
-    console.log(`Health check server is running on http://localhost:${healthCheckPort}`);
+// بدء الخادم
+app.listen(port, () => {
+    console.log(`Health check server is running on http://localhost:${port}`);
 });
 
-// إطلاق البوت بدون تكامل الويب هوك
+// إطلاق البوت
 const bot = new Telegraf(TOKEN);
 loadUserData();
 
@@ -143,9 +142,22 @@ bot.action("retry", retryHandler);
 bot.action("continue", continueHandler);
 bot.action("back_to_main", backToMainHandler);
 
-// تشغيل البوت
+// تشغيل البوت مع معالجة الأخطاء
 bot.launch().then(() => {
     console.log("Bot started...");
 }).catch((err) => {
     console.error("Failed to start bot:", err);
+});
+
+// إعادة تشغيل البوت تلقائيًا في حالة التوقف
+process.on('unhandledRejection', (err) => {
+    console.error('Unhandled Rejection:', err);
+    bot.stop();
+    bot.launch();
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    bot.stop();
+    bot.launch();
 });
