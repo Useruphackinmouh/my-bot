@@ -75,7 +75,7 @@ async function toMainMenu(ctx) {
 // بدء الأسئلة
 async function questionsHandler(ctx) {
     const userId = ctx.from.id;
-    userProgress[userId] = { score: 0, currentQuestion: 0, messageIds: [] };
+    userProgress[userId] = { score: 0, currentQuestion: 0, messageIds: [], wrongAttempts: 0 };
     await sendQuestion(ctx);
 }
 
@@ -113,17 +113,28 @@ async function checkAnswer(ctx) {
 
     if (chosenAnswer === correctAnswer) {
         userData.score += 1;
+        userData.wrongAttempts = 0; // إعادة تعيين عدد المحاولات الخاطئة
         const message = await ctx.reply(
             "✅ إجابة صحيحة!",
             Markup.inlineKeyboard([Markup.button.callback("المواصلة", "continue")])
         );
         userData.messageIds = [message.message_id];
     } else {
-        const message = await ctx.reply(
-            "❌ إجابة خاطئة! حاول مرة أخرى.",
-            Markup.inlineKeyboard([Markup.button.callback("إعادة المحاولة", "retry")])
-        );
-        userData.messageIds = [message.message_id];
+        userData.wrongAttempts += 1; // زيادة عدد المحاولات الخاطئة
+        if (userData.wrongAttempts >= 3) {
+            // إذا استنفذ المستخدم 3 محاولات خاطئة
+            const message = await ctx.reply(
+                `لقد استنفذت جميع محاولاتك للإجابة على هذا السؤال 😥\nالإجابة الصحيحة هي: ${correctAnswer}`,
+                Markup.inlineKeyboard([Markup.button.callback("المواصلة", "continue")])
+            );
+            userData.messageIds = [message.message_id];
+        } else {
+            const message = await ctx.reply(
+                "❌ إجابة خاطئة! حاول مرة أخرى.",
+                Markup.inlineKeyboard([Markup.button.callback("إعادة المحاولة", "retry")])
+            );
+            userData.messageIds = [message.message_id];
+        }
     }
     saveUserData();
 }
@@ -135,13 +146,14 @@ async function continueHandler(ctx) {
     if (!userData) return;
 
     userData.currentQuestion += 1;
+    userData.wrongAttempts = 0; // إعادة تعيين عدد المحاولات الخاطئة
     if (userData.currentQuestion < QUESTIONS.length) {
         await sendQuestion(ctx);
     } else {
         await deletePreviousMessages(ctx);
         const message = await ctx.reply(
             `🎉 انتهيت من الأسئلة!\n\nالنتيجة: ${userData.score}/${QUESTIONS.length}`,
-            Markup.inlineKeyboard([Markup.button.callback("رجوع", "back_to_main")])
+            Markup.inlineKeyboard([Markup.button.callback("العودة", "back_to_main")])
         );
         userData.messageIds = [message.message_id];
     }
