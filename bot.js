@@ -35,6 +35,16 @@ function saveUserData() {
     }
 }
 
+// تنظيف بيانات المستخدمين من الرسائل المحذوفة
+function cleanUserProgress() {
+    for (const userId in userProgress) {
+        if (userProgress[userId].messageIds.length === 0) {
+            delete userProgress[userId];
+        }
+    }
+    saveUserData();
+}
+
 // حذف الرسائل السابقة
 async function deletePreviousMessages(ctx) {
     const userId = ctx.from.id;
@@ -43,7 +53,13 @@ async function deletePreviousMessages(ctx) {
             try {
                 await ctx.deleteMessage(msgId);
             } catch (error) {
-                console.error('Error deleting message:', error);
+                if (error.response && error.response.error_code === 400 && error.response.description.includes('message to delete not found')) {
+                    // تجاهل الخطأ إذا كانت الرسالة غير موجودة
+                    console.log(`Message ${msgId} not found, skipping deletion.`);
+                } else {
+                    // إذا كان الخطأ غير متوقع، قم بتسجيله
+                    console.error('Error deleting message:', error);
+                }
             }
         }
         userProgress[userId].messageIds = [];
@@ -58,7 +74,10 @@ async function start(ctx) {
         "مرحبًا بك! 👋\nاضغط على Start للبدء.",
         Markup.keyboard([["Start"]]).resize()
     );
-    userProgress[userId] = { messageIds: [message.message_id] };
+    if (!userProgress[userId]) {
+        userProgress[userId] = { messageIds: [] };
+    }
+    userProgress[userId].messageIds.push(message.message_id);
     saveUserData();
 }
 
@@ -231,3 +250,6 @@ bot.launch({ polling: true }).then(() => {
 // إغلاق البوت بشكل أنيق عند إيقاف التشغيل
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
+// تنظيف بيانات المستخدمين عند بدء التشغيل
+cleanUserProgress();
