@@ -199,8 +199,8 @@ bot.action("retry", retryHandler);
 bot.action("continue", continueHandler);
 bot.action("back_to_main", backToMainHandler);
 
-// تشغيل البوت
-bot.launch().then(() => {
+// تشغيل البوت باستخدام Long Polling
+bot.launch({ polling: true }).then(() => {
     console.log("Bot is running...");
 }).catch((error) => {
     console.error("Error starting bot:", error);
