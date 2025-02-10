@@ -118,111 +118,65 @@ async function eveningAzkarMenu(ctx) {
     saveUserData();
 }
 
-// بدء الأسئلة
-async function questionsHandler(ctx) {
-    const userId = ctx.from.id;
-    userProgress[userId] = { score: 0, currentQuestion: 0, messageIds: [], wrongAttempts: 0 };
-    await sendQuestion(ctx);
-}
+// محتوى أذكار الصباح
+const morningAzkar = [
+    "أصبحنا وأصبح الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد، وهو على كل شيء قدير. ربِّ أسألك خير ما في هذا اليوم وخير ما بعده، وأعوذ بك من شر ما في هذا اليوم وشر ما بعده، ربِّ أعوذ بك من الكسل وسوء الكبر، ربِّ أعوذ بك من عذاب في النار وعذاب في القبر.",
+    "اللهم بك أصبحنا وبك أمسينا، وبك نحيا وبك نموت وإليك النشور.",
+    "اللهم أنت ربي، لا إله إلا أنت، خلقتني وأنا عبدك، وأنا على عهدك ووعدك ما استطعت، أعوذ بك من شر ما صنعت، أبوء لك بنعمتك عليَّ، وأبوء بذنبي، فاغفر لي، فإنه لا يغفر الذنوب إلا أنت.",
+    "اللهم إني أسألك العافية في الدنيا والآخرة، اللهم إني أسألك العفو والعافية في ديني ودنياي وأهلي ومالي، اللهم استر عوراتي، وآمن روعاتي، اللهم احفظني من بين يديَّ ومن خلفي، وعن يميني وعن شمالي، ومن فوقي، وأعوذ بعظمتك أن أغتال من تحتي.",
+    "رضيت بالله ربًّا، وبالإسلام دينًا، وبمحمد صلى الله عليه وسلم نبيًّا. (ثلاث مرات)",
+    "بسم الله الذي لا يضر مع اسمه شيء في الأرض ولا في السماء وهو السميع العليم. (ثلاث مرات)",
+    "حسبي الله لا إله إلا هو، عليه توكلت، وهو رب العرش العظيم. (سبع مرات)",
+    "اللهم صل وسلم على نبينا محمد. (عشر مرات)",
+    "لا إله إلا الله وحده لا شريك له، له الملك وله الحمد، وهو على كل شيء قدير. (مئة مرة أو عشر مرات)",
+    "أعوذ بكلمات الله التامات من شر ما خلق. (ثلاث مرات)"
+];
 
-// إرسال سؤال
-async function sendQuestion(ctx) {
-    const userId = ctx.from.id;
-    const userData = userProgress[userId];
-    if (!userData) return;
+// محتوى أذكار المساء
+const eveningAzkar = [
+    "أمسينا وأمسى الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد، وهو على كل شيء قدير. ربِّ أسألك خير ما في هذه الليلة وخير ما بعدها، وأعوذ بك من شر ما في هذه الليلة وشر ما بعدها، ربِّ أعوذ بك من الكسل وسوء الكبر، ربِّ أعوذ بك من عذاب في النار وعذاب في القبر.",
+    "اللهم بك أمسينا وبك أصبحنا، وبك نحيا وبك نموت وإليك المصير.",
+    "اللهم أنت ربي، لا إله إلا أنت، خلقتني وأنا عبدك، وأنا على عهدك ووعدك ما استطعت، أعوذ بك من شر ما صنعت، أبوء لك بنعمتك عليَّ، وأبوء بذنبي، فاغفر لي، فإنه لا يغفر الذنوب إلا أنت.",
+    "اللهم إني أسألك العافية في الدنيا والآخرة، اللهم إني أسألك العفو والعافية في ديني ودنياي وأهلي ومالي، اللهم استر عوراتي، وآمن روعاتي، اللهم احفظني من بين يديَّ ومن خلفي، وعن يميني وعن شمالي، ومن فوقي، وأعوذ بعظمتك أن أغتال من تحتي.",
+    "رضيت بالله ربًّا، وبالإسلام دينًا، وبمحمد صلى الله عليه وسلم نبيًّا. (ثلاث مرات)",
+    "بسم الله الذي لا يضر مع اسمه شيء في الأرض ولا في السماء وهو السميع العليم. (ثلاث مرات)",
+    "حسبي الله لا إله إلا هو، عليه توكلت، وهو رب العرش العظيم. (سبع مرات)",
+    "اللهم صل وسلم على نبينا محمد. (عشر مرات)",
+    "لا إله إلا الله وحده لا شريك له، له الملك وله الحمد، وهو على كل شيء قدير. (مئة مرة أو عشر مرات)",
+    "أعوذ بكلمات الله التامات من شر ما خلق. (ثلاث مرات)"
+];
 
+// عرض ذكر معين من أذكار الصباح
+async function showMorningAzkar(ctx, index) {
+    const userId = ctx.from.id;
     await deletePreviousMessages(ctx);
-    const questionData = QUESTIONS[userData.currentQuestion];
-    if (!questionData) return;
-
-    const keyboard = Markup.inlineKeyboard(
-        questionData.options.map((opt, i) => Markup.button.callback(opt, `answer_${i}`))
-    );
     const message = await ctx.reply(
-        `❓ *السؤال ${userData.currentQuestion + 1}:*\n${questionData.question}`,
-        { parse_mode: "Markdown", ...keyboard }
-    );
-    userData.messageIds = [message.message_id];
-    saveUserData();
-}
-
-// التحقق من الإجابة
-async function checkAnswer(ctx) {
-    const userId = ctx.from.id;
-    const userData = userProgress[userId];
-    if (!userData) return;
-
-    await deletePreviousMessages(ctx);
-    const chosenIndex = parseInt(ctx.callbackQuery.data.split("_")[1]);
-    const correctAnswer = QUESTIONS[userData.currentQuestion].answer;
-    const chosenAnswer = QUESTIONS[userData.currentQuestion].options[chosenIndex];
-
-    if (chosenAnswer === correctAnswer) {
-        userData.score += 1;
-        userData.wrongAttempts = 0; // إعادة تعيين عدد المحاولات الخاطئة
-        const message = await ctx.reply(
-            "✅ إجابة صحيحة!",
-            Markup.inlineKeyboard([Markup.button.callback("المواصلة", "continue")])
-        );
-        userData.messageIds = [message.message_id];
-    } else {
-        userData.wrongAttempts += 1; // زيادة عدد المحاولات الخاطئة
-        if (userData.wrongAttempts >= 3) {
-            // إذا استنفذ المستخدم 3 محاولات خاطئة
-            const message = await ctx.reply(
-                `لقد استنفذت جميع محاولاتك للإجابة على هذا السؤال 😥\nالإجابة الصحيحة هي: ${correctAnswer}`,
-                Markup.inlineKeyboard([Markup.button.callback("المواصلة", "continue")])
-            );
-            userData.messageIds = [message.message_id];
-        } else {
-            const message = await ctx.reply(
-                "❌ إجابة خاطئة! حاول مرة أخرى.",
-                Markup.inlineKeyboard([Markup.button.callback("إعادة المحاولة", "retry")])
-            );
-            userData.messageIds = [message.message_id];
+        `📖 *الذكر ${index + 1}:*\n${morningAzkar[index]}`,
+        {
+            parse_mode: "Markdown",
+            ...Markup.inlineKeyboard([
+                Markup.button.callback("المواصلة ➡️", `morning_${index + 1}`),
+                Markup.button.callback("العودة 🔙", "back_to_morning_menu")
+            ])
         }
-    }
+    );
+    userProgress[userId].messageIds = [message.message_id];
     saveUserData();
 }
 
-// الانتقال إلى السؤال التالي
-async function continueHandler(ctx) {
-    const userId = ctx.from.id;
-    const userData = userProgress[userId];
-    if (!userData) return;
-
-    userData.currentQuestion += 1;
-    userData.wrongAttempts = 0; // إعادة تعيين عدد المحاولات الخاطئة
-    if (userData.currentQuestion < QUESTIONS.length) {
-        await sendQuestion(ctx);
-    } else {
-        await deletePreviousMessages(ctx);
-        const message = await ctx.reply(
-            `🎉 انتهيت من الأسئلة!\n\nالنتيجة: ${userData.score}/${QUESTIONS.length}`,
-            Markup.inlineKeyboard([Markup.button.callback("العودة", "back_to_main")])
-        );
-        userData.messageIds = [message.message_id];
-    }
-    saveUserData();
-}
-
-// إعادة المحاولة
-async function retryHandler(ctx) {
-    await sendQuestion(ctx);
-}
-
-// الرجوع إلى القائمة الرئيسية
-async function backToMainHandler(ctx) {
-    await toMainMenu(ctx);
-}
-
-// رسالة "غير متوفر"
-async function notAvailableHandler(ctx) {
+// عرض ذكر معين من أذكار المساء
+async function showEveningAzkar(ctx, index) {
     const userId = ctx.from.id;
     await deletePreviousMessages(ctx);
     const message = await ctx.reply(
-        "هذا المحتوى غير متوفر حاليًا 😅\nيرجى الاختيار من القائمة أدناه.",
-        Markup.keyboard([["الأسئلة 🤓", "أذكار ❤️‍🩹"], ["القرءان الكريم 📖😍", "تلاوة 🥰"], ["رجوع 💢"]]).resize()
+        `📖 *الذكر ${index + 1}:*\n${eveningAzkar[index]}`,
+        {
+            parse_mode: "Markdown",
+            ...Markup.inlineKeyboard([
+                Markup.button.callback("المواصلة ➡️", `evening_${index + 1}`),
+                Markup.button.callback("العودة 🔙", "back_to_evening_menu")
+            ])
+        }
     );
     userProgress[userId].messageIds = [message.message_id];
     saveUserData();
@@ -242,11 +196,24 @@ bot.hears("تلاوة 🥰", notAvailableHandler);
 bot.hears("رجوع 💢", backToMainHandler);
 bot.hears("أذكار الصباح ☀", morningAzkarMenu);
 bot.hears("أذكار المساء 🌝", eveningAzkarMenu);
-bot.hears("رجوع 💢", azkarMenu); // الرجوع من قائمة الأذكار إلى القائمة الرئيسية
-bot.action(/answer_\d+/, checkAnswer);
-bot.action("retry", retryHandler);
-bot.action("continue", continueHandler);
-bot.action("back_to_main", backToMainHandler);
+
+// معالجة أذكار الصباح
+for (let i = 0; i < 10; i++) {
+    bot.hears(`الذكر ${i + 1}`, (ctx) => showMorningAzkar(ctx, i));
+    bot.action(`morning_${i + 1}`, (ctx) => showMorningAzkar(ctx, i));
+}
+
+// معالجة أذكار المساء
+for (let i = 0; i < 10; i++) {
+    bot.hears(`الذكر ${i + 1}`, (ctx) => showEveningAzkar(ctx, i));
+    bot.action(`evening_${i + 1}`, (ctx) => showEveningAzkar(ctx, i));
+}
+
+// الرجوع إلى قائمة أذكار الصباح
+bot.action("back_to_morning_menu", (ctx) => morningAzkarMenu(ctx));
+
+// الرجوع إلى قائمة أذكار المساء
+bot.action("back_to_evening_menu", (ctx) => eveningAzkarMenu(ctx));
 
 // تشغيل البوت باستخدام Long Polling
 bot.launch({ polling: true }).then(() => {
