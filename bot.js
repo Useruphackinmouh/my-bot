@@ -72,6 +72,52 @@ async function toMainMenu(ctx) {
     saveUserData();
 }
 
+// قائمة الأذكار
+async function azkarMenu(ctx) {
+    const userId = ctx.from.id;
+    await deletePreviousMessages(ctx);
+    const message = await ctx.reply(
+        "اختر نوع الأذكار:",
+        Markup.keyboard([["أذكار الصباح ☀", "أذكار المساء 🌝"], ["رجوع 💢"]]).resize()
+    );
+    userProgress[userId].messageIds = [message.message_id];
+    saveUserData();
+}
+
+// قائمة أذكار الصباح
+async function morningAzkarMenu(ctx) {
+    const userId = ctx.from.id;
+    await deletePreviousMessages(ctx);
+    const buttons = [];
+    for (let i = 1; i <= 10; i++) {
+        buttons.push([`الذكر ${i}`]);
+    }
+    buttons.push(["رجوع 💢"]);
+    const message = await ctx.reply(
+        "اختر ذكرًا من أذكار الصباح:",
+        Markup.keyboard(buttons).resize()
+    );
+    userProgress[userId].messageIds = [message.message_id];
+    saveUserData();
+}
+
+// قائمة أذكار المساء
+async function eveningAzkarMenu(ctx) {
+    const userId = ctx.from.id;
+    await deletePreviousMessages(ctx);
+    const buttons = [];
+    for (let i = 1; i <= 10; i++) {
+        buttons.push([`الذكر ${i}`]);
+    }
+    buttons.push(["رجوع 💢"]);
+    const message = await ctx.reply(
+        "اختر ذكرًا من أذكار المساء:",
+        Markup.keyboard(buttons).resize()
+    );
+    userProgress[userId].messageIds = [message.message_id];
+    saveUserData();
+}
+
 // بدء الأسئلة
 async function questionsHandler(ctx) {
     const userId = ctx.from.id;
@@ -190,10 +236,13 @@ loadUserData();
 bot.start(start);
 bot.hears("Start", toMainMenu);
 bot.hears("الأسئلة 🤓", questionsHandler);
-bot.hears("أذكار ❤️‍🩹", notAvailableHandler);
+bot.hears("أذكار ❤️‍🩹", azkarMenu);
 bot.hears("القرءان الكريم 📖😍", notAvailableHandler);
 bot.hears("تلاوة 🥰", notAvailableHandler);
 bot.hears("رجوع 💢", backToMainHandler);
+bot.hears("أذكار الصباح ☀", morningAzkarMenu);
+bot.hears("أذكار المساء 🌝", eveningAzkarMenu);
+bot.hears("رجوع 💢", azkarMenu); // الرجوع من قائمة الأذكار إلى القائمة الرئيسية
 bot.action(/answer_\d+/, checkAnswer);
 bot.action("retry", retryHandler);
 bot.action("continue", continueHandler);
