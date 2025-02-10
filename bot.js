@@ -217,6 +217,52 @@ async function showEveningAzkar(ctx, index) {
     }
 }
 
+// معالجة الأسئلة
+async function questionsHandler(ctx) {
+    const userId = ctx.from.id;
+    await deletePreviousMessages(ctx);
+    userProgress[userId] = { ...userProgress[userId], currentQuestionIndex: 0 };
+    await showQuestion(ctx, userId);
+}
+
+// عرض السؤال الحالي
+async function showQuestion(ctx, userId) {
+    const currentQuestionIndex = userProgress[userId].currentQuestionIndex;
+    if (currentQuestionIndex < QUESTIONS.length) {
+        const question = QUESTIONS[currentQuestionIndex];
+        const options = question.options.map((option, i) => `${i + 1}. ${option}`).join('\n');
+        const message = await ctx.reply(
+            `❓ *السؤال ${currentQuestionIndex + 1}:*\n${question.question}\n\n${options}`,
+            {
+                parse_mode: "Markdown",
+                ...Markup.keyboard(question.options.map(option => [option])
+            }
+        );
+        userProgress[userId].messageIds = [message.message_id];
+        saveUserData();
+    } else {
+        await ctx.reply("لقد انتهيت من جميع الأسئلة! 🎉");
+    }
+}
+
+// معالجة الإجابات
+async function handleAnswer(ctx) {
+    const userId = ctx.from.id;
+    const userAnswer = ctx.message.text;
+    const currentQuestionIndex = userProgress[userId].currentQuestionIndex;
+    const question = QUESTIONS[currentQuestionIndex];
+
+    if (userAnswer === question.answer) {
+        await ctx.reply("إجابة صحيحة! 🎉");
+    } else {
+        await ctx.reply(`إجابة خاطئة! الإجابة الصحيحة هي: ${question.answer}`);
+    }
+
+    // الانتقال إلى السؤال التالي
+    userProgress[userId].currentQuestionIndex += 1;
+    await showQuestion(ctx, userId);
+}
+
 // تهيئة البوت
 const bot = new Telegraf(TOKEN);
 loadUserData();
@@ -224,7 +270,7 @@ loadUserData();
 // الأوامر
 bot.start(start);
 bot.hears("Start", toMainMenu);
-bot.hears("الأسئلة 🤓", (ctx) => ctx.reply("هذه الميزة غير متاحة حاليًا."));
+bot.hears("الأسئلة 🤓", questionsHandler);
 bot.hears("أذكار ❤️‍🩹", azkarMenu);
 bot.hears("القرءان الكريم 📖😍", (ctx) => ctx.reply("هذه الميزة غير متاحة حاليًا."));
 bot.hears("تلاوة 🥰", (ctx) => ctx.reply("هذه الميزة غير متاحة حاليًا."));
@@ -242,6 +288,13 @@ for (let i = 0; i < 10; i++) {
 for (let i = 0; i < 10; i++) {
     bot.hears(`الذكر ${i + 1}`, (ctx) => showEveningAzkar(ctx, i));
     bot.action(`evening_${i + 1}`, (ctx) => showEveningAzkar(ctx, i + 1));
+}
+
+// معالجة الإجابات على الأسئلة
+for (const question of QUESTIONS) {
+    for (const option of question.options) {
+        bot.hears(option, handleAnswer);
+    }
 }
 
 // الرجوع إلى قائمة أذكار الصباح
