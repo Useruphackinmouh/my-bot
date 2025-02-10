@@ -221,7 +221,7 @@ async function showEveningAzkar(ctx, index) {
 async function questionsHandler(ctx) {
     const userId = ctx.from.id;
     await deletePreviousMessages(ctx);
-    userProgress[userId] = { ...userProgress[userId], currentQuestionIndex: 0 };
+    userProgress[userId] = { ...userProgress[userId], currentQuestionIndex: 0, attempts: 3 };
     await showQuestion(ctx, userId);
 }
 
@@ -230,12 +230,12 @@ async function showQuestion(ctx, userId) {
     const currentQuestionIndex = userProgress[userId].currentQuestionIndex;
     if (currentQuestionIndex < QUESTIONS.length) {
         const question = QUESTIONS[currentQuestionIndex];
-        const options = question.options.map((option, i) => `${i + 1}. ${option}`).join('\n');
+        const buttons = question.options.map(option => Markup.button.callback(option, `answer_${option}`));
         const message = await ctx.reply(
-            `❓ *السؤال ${currentQuestionIndex + 1}:*\n${question.question}\n\n${options}`,
+            `❓ *السؤال ${currentQuestionIndex + 1}:*\n${question.question}`,
             {
                 parse_mode: "Markdown",
-                ...Markup.keyboard(question.options.map(option => [option])).resize()
+                ...Markup.inlineKeyboard(buttons)
             }
         );
         userProgress[userId].messageIds = [message.message_id];
@@ -248,19 +248,30 @@ async function showQuestion(ctx, userId) {
 // معالجة الإجابات
 async function handleAnswer(ctx) {
     const userId = ctx.from.id;
-    const userAnswer = ctx.message.text;
+    const userAnswer = ctx.callbackQuery.data.replace('answer_', '');
     const currentQuestionIndex = userProgress[userId].currentQuestionIndex;
     const question = QUESTIONS[currentQuestionIndex];
 
     if (userAnswer === question.answer) {
         await ctx.reply("إجابة صحيحة! 🎉");
+        userProgress[userId].currentQuestionIndex += 1;
+        userProgress[userId].attempts = 3; // إعادة تعيين المحاولات
+        await showQuestion(ctx, userId);
     } else {
-        await ctx.reply(`إجابة خاطئة! الإجابة الصحيحة هي: ${question.answer}`);
+        userProgress[userId].attempts -= 1;
+        if (userProgress[userId].attempts > 0) {
+            await ctx.reply(`إجابة خاطئة! لديك ${userProgress[userId].attempts} محاولة/محاولات متبقية.`, Markup.inlineKeyboard([
+                Markup.button.callback("إعادة المحاولة", "retry_question")
+            ]));
+        } else {
+            await ctx.reply("لقد استنفذت جميع محاولاتك! الإجابة الصحيحة هي: " + question.answer, Markup.inlineKeyboard([
+                Markup.button.callback("المواصلة ➡️", "next_question")
+            ]));
+            userProgress[userId].currentQuestionIndex += 1;
+            userProgress[userId].attempts = 3; // إعادة تعيين المحاولات
+        }
     }
-
-    // الانتقال إلى السؤال التالي
-    userProgress[userId].currentQuestionIndex += 1;
-    await showQuestion(ctx, userId);
+    saveUserData();
 }
 
 // تهيئة البوت
@@ -291,11 +302,9 @@ for (let i = 0; i < 10; i++) {
 }
 
 // معالجة الإجابات على الأسئلة
-for (const question of QUESTIONS) {
-    for (const option of question.options) {
-        bot.hears(option, handleAnswer);
-    }
-}
+bot.action(/answer_/, handleAnswer);
+bot.action("retry_question", (ctx) => showQuestion(ctx, ctx.from.id));
+bot.action("next_question", (ctx) => showQuestion(ctx, ctx.from.id));
 
 // الرجوع إلى قائمة أذكار الصباح
 bot.action("back_to_morning_menu", (ctx) => morningAzkarMenu(ctx));
