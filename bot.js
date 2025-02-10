@@ -17,10 +17,18 @@ let userProgress = {};
 function loadUserData() {
     try {
         if (fs.existsSync(USER_DATA_FILE)) {
-            userProgress = JSON.parse(fs.readFileSync(USER_DATA_FILE));
+            const data = fs.readFileSync(USER_DATA_FILE, 'utf8');
+            userProgress = JSON.parse(data);
+            // تأكد من أن userProgress هو كائن
+            if (typeof userProgress !== 'object' || userProgress === null) {
+                userProgress = {};
+            }
+        } else {
+            userProgress = {};
         }
     } catch (error) {
         console.error('Error loading user data:', error);
+        userProgress = {};
     }
 }
 
@@ -38,7 +46,7 @@ function saveUserData() {
 // تنظيف بيانات المستخدمين من الرسائل المحذوفة
 function cleanUserProgress() {
     for (const userId in userProgress) {
-        if (userProgress[userId].messageIds.length === 0) {
+        if (userProgress[userId] && userProgress[userId].messageIds && userProgress[userId].messageIds.length === 0) {
             delete userProgress[userId];
         }
     }
@@ -54,10 +62,8 @@ async function deletePreviousMessages(ctx) {
                 await ctx.deleteMessage(msgId);
             } catch (error) {
                 if (error.response && error.response.error_code === 400 && error.response.description.includes('message to delete not found')) {
-                    // تجاهل الخطأ إذا كانت الرسالة غير موجودة
                     console.log(`Message ${msgId} not found, skipping deletion.`);
                 } else {
-                    // إذا كان الخطأ غير متوقع، قم بتسجيله
                     console.error('Error deleting message:', error);
                 }
             }
