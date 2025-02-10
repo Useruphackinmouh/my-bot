@@ -241,7 +241,12 @@ async function showQuestion(ctx, userId) {
         userProgress[userId].messageIds = [message.message_id];
         saveUserData();
     } else {
-        await ctx.reply("لقد انتهيت من جميع الأسئلة! 🎉");
+        await ctx.reply(
+            "لقد انتهيت من جميع الأسئلة! 🎉",
+            Markup.inlineKeyboard([
+                Markup.button.callback("العودة إلى القائمة الرئيسية ⏩", "back_to_main_menu")
+            ])
+        );
     }
 }
 
@@ -305,6 +310,7 @@ for (let i = 0; i < 10; i++) {
 bot.action(/answer_/, handleAnswer);
 bot.action("retry_question", (ctx) => showQuestion(ctx, ctx.from.id));
 bot.action("next_question", (ctx) => showQuestion(ctx, ctx.from.id));
+bot.action("back_to_main_menu", (ctx) => toMainMenu(ctx));
 
 // الرجوع إلى قائمة أذكار الصباح
 bot.action("back_to_morning_menu", (ctx) => morningAzkarMenu(ctx));
