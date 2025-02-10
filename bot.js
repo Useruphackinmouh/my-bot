@@ -2,7 +2,7 @@ const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
 const express = require('express');
 const app = express();
-const port = 3000; // أو أي رقم آخر للمنفذ الذي تود استخدامه
+const port = process.env.PORT || 3000; // استخدام المنفذ المحدد في البيئة أو 3000 كمنفذ افتراضي
 
 const TOKEN = "7733359265:AAFOs2Jqssu3T4oEnW0oPew7iPhK564PSUE"; // استبدل التوكن هنا
 const QUESTIONS = [
@@ -146,7 +146,7 @@ bot.action("back_to_main", backToMainHandler);
 bot.launch({
     webhook: {
         domain: 'https://your-render-app-url.onrender.com', // استبدل هذا بعنوان تطبيقك على Render
-        port: port
+        port: port // استخدم المنفذ الذي تم تحديده في البيئة
     }
 });
 console.log("Bot started...");
