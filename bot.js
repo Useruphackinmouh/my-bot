@@ -1,8 +1,5 @@
 const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
-const express = require('express');
-const app = express();
-const port = 3000; // أو أي رقم آخر للمنفذ الذي تود استخدامه
 
 const TOKEN = "7733359265:AAFOs2Jqssu3T4oEnW0oPew7iPhK564PSUE"; // استبدل التوكن هنا
 const QUESTIONS = [
@@ -120,17 +117,7 @@ async function backToMainHandler(ctx) {
     await toMainMenu(ctx);
 }
 
-// إعداد نقطة فحص الصحة
-app.get('/health', (req, res) => {
-    res.status(200).send('Bot is running!');
-});
-
-// بدء الخادم
-app.listen(port, () => {
-    console.log(`Health check server is running on http://localhost:${port}`);
-});
-
-// إطلاق البوت مع تكامل Express
+// إطلاق البوت
 const bot = new Telegraf(TOKEN);
 loadUserData();
 
@@ -146,7 +133,7 @@ bot.action("back_to_main", backToMainHandler);
 bot.launch({
     webhook: {
         domain: 'https://your-render-app-url.onrender.com', // استبدل هذا بعنوان تطبيقك على Render
-        port: port
+        port: process.env.PORT || 3000 // استخدام المنفذ المحدد من Render أو 3000 افتراضيًا
     }
 });
 console.log("Bot started...");
