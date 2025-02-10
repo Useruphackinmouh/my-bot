@@ -1,1 +1,19 @@
-{"userProgress":{"5213421907":{"messageIds":[1276]}},"userState":{"5213421907":"main_menu"}}
+{
+  "userProgress": {
+    "5213421907": {
+      "messageIds": [
+        1276
+      ]
+    }
+  },
+  "userState": {
+    "5213421907": "main_menu"
+  },
+  "5213421907": {
+    "score": 2,
+    "currentQuestion": 2,
+    "messageIds": [
+      1507
+    ]
+  }
+}
