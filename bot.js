@@ -48,12 +48,12 @@ async function deletePreviousMessages(ctx) {
     }
 }
 
-// بدء البوت
+// بدء البوت وعرض القائمة الرئيسية
 async function start(ctx) {
     const userId = ctx.from.id;
     await deletePreviousMessages(ctx);
     const message = await ctx.reply(
-        "مرحبا بك! اضغط على Start للبدء.",
+        "مرحبًا بك! 👋\nاضغط على Start للبدء.",
         Markup.keyboard([["Start"]]).resize()
     );
     userProgress[userId] = { messageIds: [message.message_id] };
@@ -66,13 +66,13 @@ async function toMainMenu(ctx) {
     await deletePreviousMessages(ctx);
     const message = await ctx.reply(
         "اختر أحد الخيارات:",
-        Markup.keyboard([["الأسئلة 🧠"], ["رجوع"]]).resize()
+        Markup.keyboard([["الأسئلة 🤓", "أذكار ❤️‍🩹"], ["القرءان الكريم 📖😍", "تلاوة 🥰"], ["رجوع 💢"]]).resize()
     );
     userProgress[userId].messageIds = [message.message_id];
     saveUserData();
 }
 
-// تعريف الدالة questionsHandler
+// بدء الأسئلة
 async function questionsHandler(ctx) {
     const userId = ctx.from.id;
     userProgress[userId] = { score: 0, currentQuestion: 0, messageIds: [] };
@@ -158,6 +158,18 @@ async function backToMainHandler(ctx) {
     await toMainMenu(ctx);
 }
 
+// رسالة "غير متوفر"
+async function notAvailableHandler(ctx) {
+    const userId = ctx.from.id;
+    await deletePreviousMessages(ctx);
+    const message = await ctx.reply(
+        "هذا المحتوى غير متوفر حاليًا 😅\nيرجى الاختيار من القائمة أدناه.",
+        Markup.keyboard([["الأسئلة 🤓", "أذكار ❤️‍🩹"], ["القرءان الكريم 📖😍", "تلاوة 🥰"], ["رجوع 💢"]]).resize()
+    );
+    userProgress[userId].messageIds = [message.message_id];
+    saveUserData();
+}
+
 // تهيئة البوت
 const bot = new Telegraf(TOKEN);
 loadUserData();
@@ -165,7 +177,11 @@ loadUserData();
 // الأوامر
 bot.start(start);
 bot.hears("Start", toMainMenu);
-bot.hears("الأسئلة 🧠", questionsHandler); // تم تعريف questionsHandler قبل استخدامها
+bot.hears("الأسئلة 🤓", questionsHandler);
+bot.hears("أذكار ❤️‍🩹", notAvailableHandler);
+bot.hears("القرءان الكريم 📖😍", notAvailableHandler);
+bot.hears("تلاوة 🥰", notAvailableHandler);
+bot.hears("رجوع 💢", backToMainHandler);
 bot.action(/answer_\d+/, checkAnswer);
 bot.action("retry", retryHandler);
 bot.action("continue", continueHandler);
