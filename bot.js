@@ -4,7 +4,7 @@ const express = require('express');
 const app = express();
 const port = 3000; // أو أي رقم آخر للمنفذ الذي تود استخدامه
 
-const TOKEN = "YOUR_BOT_TOKEN"; // استبدل التوكن هنا
+const TOKEN = "7733359265:AAFOs2Jqssu3T4oEnW0oPew7iPhK564PSUE"; // استبدل التوكن هنا
 const QUESTIONS = [
     { question: "ما هو ترتيب شهر رمضان في السنة الهجرية؟", options: ["7", "8", "9", "10"], answer: "9" },
     { question: "ما هو حكم صيام رمضان؟", options: ["مستحب", "واجب", "مكروه", "مباح"], answer: "واجب" },
