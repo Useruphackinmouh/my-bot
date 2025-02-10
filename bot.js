@@ -182,6 +182,11 @@ async function showEveningAzkar(ctx, index) {
     saveUserData();
 }
 
+// معالجة الأسئلة
+function questionsHandler(ctx) {
+    ctx.reply("📚 هذه قائمة الأسئلة المتاحة:\n1. ما هو ترتيب شهر رمضان؟\n2. ما هو حكم صيام رمضان؟");
+}
+
 // تهيئة البوت
 const bot = new Telegraf(TOKEN);
 loadUserData();
@@ -191,37 +196,11 @@ bot.start(start);
 bot.hears("Start", toMainMenu);
 bot.hears("الأسئلة 🤓", questionsHandler);
 bot.hears("أذكار ❤️‍🩹", azkarMenu);
-bot.hears("القرءان الكريم 📖😍", notAvailableHandler);
-bot.hears("تلاوة 🥰", notAvailableHandler);
-bot.hears("رجوع 💢", backToMainHandler);
+bot.hears("القرءان الكريم 📖😍", (ctx) => ctx.reply("🚧 غير متاح حاليًا."));
+bot.hears("تلاوة 🥰", (ctx) => ctx.reply("🚧 غير متاح حاليًا."));
+bot.hears("رجوع 💢", toMainMenu);
 bot.hears("أذكار الصباح ☀", morningAzkarMenu);
 bot.hears("أذكار المساء 🌝", eveningAzkarMenu);
 
-// معالجة أذكار الصباح
-for (let i = 0; i < 10; i++) {
-    bot.hears(`الذكر ${i + 1}`, (ctx) => showMorningAzkar(ctx, i));
-    bot.action(`morning_${i + 1}`, (ctx) => showMorningAzkar(ctx, i));
-}
-
-// معالجة أذكار المساء
-for (let i = 0; i < 10; i++) {
-    bot.hears(`الذكر ${i + 1}`, (ctx) => showEveningAzkar(ctx, i));
-    bot.action(`evening_${i + 1}`, (ctx) => showEveningAzkar(ctx, i));
-}
-
-// الرجوع إلى قائمة أذكار الصباح
-bot.action("back_to_morning_menu", (ctx) => morningAzkarMenu(ctx));
-
-// الرجوع إلى قائمة أذكار المساء
-bot.action("back_to_evening_menu", (ctx) => eveningAzkarMenu(ctx));
-
 // تشغيل البوت باستخدام Long Polling
-bot.launch({ polling: true }).then(() => {
-    console.log("Bot is running...");
-}).catch((error) => {
-    console.error("Error starting bot:", error);
-});
-
-// إغلاق البوت بشكل أنيق عند إيقاف التشغيل
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+bot.launch({ polling
