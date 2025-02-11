@@ -57,16 +57,12 @@ function cleanUserProgress() {
 async function deletePreviousMessages(ctx) {
     const userId = ctx.from.id;
     if (userProgress[userId] && userProgress[userId].messageIds) {
-        for (const msgId of userProgress[userId].messageIds) {
-            try {
-                await ctx.deleteMessage(msgId);
-            } catch (error) {
-                if (error.response && error.response.error_code === 400 && error.response.description.includes('message to delete not found')) {
-                    console.log(`Message ${msgId} not found, skipping deletion.`);
-                } else {
-                    console.error('Error deleting message:', error);
-                }
-            }
+        try {
+            await Promise.all(
+                userProgress[userId].messageIds.map(msgId => ctx.deleteMessage(msgId).catch(() => {}))
+            );
+        } catch (error) {
+            console.error('Error deleting messages:', error);
         }
         userProgress[userId].messageIds = [];
     }
