@@ -2,7 +2,7 @@ const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
 const path = require('path');
 
-const TOKEN = process.env.TOKEN || "YOUR_BOT_TOKEN";
+const TOKEN = process.env.TOKEN || "7884758906:AAHjXUAkcYWU_TGDowsaRqYsEssJGxdFdh4";
 const QUESTIONS = [
     { question: "ما هو ترتيب شهر رمضان في السنة الهجرية؟", options: ["7", "8", "9", "10"], answer: "9" },
     { question: "ما هو حكم صيام رمضان؟", options: ["مستحب", "واجب", "مكروه", "مباح"], answer: "واجب" },
