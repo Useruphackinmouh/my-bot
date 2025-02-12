@@ -263,6 +263,9 @@ async function handleAnswer(ctx) {
     const currentQuestionIndex = userProgress[userId].currentQuestionIndex;
     const question = QUESTIONS[currentQuestionIndex];
 
+    // حذف رسالة السؤال
+    await deletePreviousMessages(ctx);
+
     if (userAnswer === question.answer) {
         await ctx.reply("إجابة صحيحة! 🎉");
         userProgress[userId].currentQuestionIndex += 1;
